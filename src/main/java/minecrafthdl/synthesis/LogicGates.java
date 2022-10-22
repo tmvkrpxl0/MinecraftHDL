@@ -32,13 +32,16 @@ public class LogicGates {
 
         BlockState signState = Blocks.OAK_SIGN.defaultBlockState().setValue(BlockStateProperties.ROTATION_16, 8);
         BlockPos position = new BlockPos(0, 1, 0);
-        SignBlockEntity sign = new SignBlockEntity(position, signState);
 
-        for (int i = 0 ; i < id_txt.length; i++){
-            sign.setMessage(i, Component.literal(id_txt[i]));
-        }
 
-        gate.te_map.put(position, sign);
+        gate.te_map.put(position, vec3i -> {
+            SignBlockEntity sign = new SignBlockEntity(new BlockPos(vec3i), signState);
+
+            for (int i = 0 ; i < id_txt.length; i++){
+                sign.setMessage(i, Component.literal(id_txt[i]));
+            }
+            return sign;
+        });
 
         gate.setBlock(0, 0, 0, Blocks.WHITE_WOOL.defaultBlockState());
         gate.setBlock(0, 1, 0, Blocks.OAK_SIGN.defaultBlockState().setValue(BlockStateProperties.ROTATION_16, 8));
@@ -53,13 +56,15 @@ public class LogicGates {
 
         BlockState signState = Blocks.OAK_SIGN.defaultBlockState().setValue(BlockStateProperties.ROTATION_16, 0);
         BlockPos position = new BlockPos(0, 1, 0);
-        SignBlockEntity sign = new SignBlockEntity(position, signState);
 
-        for (int i = 0 ; i < textLines.length; i++){
-            sign.setMessage(i, Component.literal(textLines[i]));
-        }
+        gate.te_map.put(position, vec3i -> {
+            SignBlockEntity sign = new SignBlockEntity(new BlockPos(vec3i), signState);
 
-        gate.te_map.put(position, sign);
+            for (int i = 0 ; i < textLines.length; i++){
+                sign.setMessage(i, Component.literal(textLines[i]));
+            }
+            return sign;
+        });
 
         gate.setBlock(0, 0, 0, Blocks.REDSTONE_LAMP.defaultBlockState());
         gate.setBlock(0, 1, 0, signState);
@@ -90,7 +95,7 @@ public class LogicGates {
     public static Gate NOT(){
         Gate gate = new Gate(1, 1, 3, 1, 1, 0, 0, new int[]{0});
         gate.setBlock(0, 0, 0, Blocks.WHITE_WOOL.defaultBlockState());
-        gate.setBlock(0, 0, 1, Blocks.REDSTONE_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
+        gate.setBlock(0, 0, 1, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
         gate.setBlock(0, 0, 2, Blocks.REDSTONE_WIRE.defaultBlockState());
         return gate;
     }
@@ -112,7 +117,7 @@ public class LogicGates {
 
         Gate gate = new Gate(width, 2, 4, inputs, 1, 1, 0, new int[]{0});
 
-        gate.setBlock(0, 0, 2, Blocks.REDSTONE_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
+        gate.setBlock(0, 0, 2, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
         gate.setBlock(0, 0, 3, Blocks.REDSTONE_WIRE.defaultBlockState());
 
         for (int i = 0; i < width; i+=2) {
@@ -165,10 +170,10 @@ public class LogicGates {
         Gate gate = new Gate(3, 2, 7, 2, 1, 1, 0, new int[]{0});
 
         gate.setBlock(0, 0, 0, Blocks.WHITE_WOOL.defaultBlockState());
-        gate.setBlock(0, 0, 1, Blocks.REDSTONE_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
+        gate.setBlock(0, 0, 1, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
         gate.setBlock(0, 0, 2, Blocks.REDSTONE_WIRE.defaultBlockState());
         gate.setBlock(0, 0, 3, Blocks.WHITE_WOOL.defaultBlockState());
-        gate.setBlock(0, 0, 4, Blocks.REDSTONE_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
+        gate.setBlock(0, 0, 4, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
         gate.setBlock(0, 0, 5, Blocks.REDSTONE_WIRE.defaultBlockState());
 
         gate.setBlock(0, 1, 0, Blocks.REDSTONE_TORCH.defaultBlockState());
@@ -178,16 +183,16 @@ public class LogicGates {
         gate.setBlock(1, 1, 0, Blocks.REDSTONE_WIRE.defaultBlockState());
         gate.setBlock(1, 0, 1, Blocks.WHITE_WOOL.defaultBlockState());
         gate.setBlock(1, 1, 1, Blocks.REDSTONE_WIRE.defaultBlockState());
-        gate.setBlock(1, 0, 2, Blocks.REDSTONE_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
+        gate.setBlock(1, 0, 2, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
         gate.setBlock(1, 0, 4, Blocks.REDSTONE_WIRE.defaultBlockState());
         gate.setBlock(1, 0, 5, Blocks.REDSTONE_WIRE.defaultBlockState());
 
 
         gate.setBlock(2, 0, 0, Blocks.WHITE_WOOL.defaultBlockState());
-        gate.setBlock(2, 0, 1, Blocks.REDSTONE_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
+        gate.setBlock(2, 0, 1, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
         gate.setBlock(2, 0, 2, Blocks.REDSTONE_WIRE.defaultBlockState());
         gate.setBlock(2, 0, 3, Blocks.WHITE_WOOL.defaultBlockState());
-        gate.setBlock(2, 0, 4, Blocks.REDSTONE_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
+        gate.setBlock(2, 0, 4, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
 
         gate.setBlock(2, 1, 0, Blocks.REDSTONE_TORCH.defaultBlockState());
         gate.setBlock(2, 1, 3, Blocks.REDSTONE_WIRE.defaultBlockState());
@@ -233,7 +238,7 @@ public class LogicGates {
         gate.setBlock(0, 0, 0, Blocks.WHITE_WOOL.defaultBlockState());
         gate.setBlock(0, 0, 1, Blocks.WHITE_WOOL.defaultBlockState());
         gate.setBlock(0, 0, 2, Blocks.WHITE_WOOL.defaultBlockState());
-        gate.setBlock(0, 0, 3, Blocks.REDSTONE_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
+        gate.setBlock(0, 0, 3, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
         gate.setBlock(0, 0, 4, Blocks.REDSTONE_WIRE.defaultBlockState());
         gate.setBlock(0, 0, 5, Blocks.REPEATER.defaultBlockState().setValue(BlockStateProperties.POWERED, false).setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH));
 
@@ -245,11 +250,11 @@ public class LogicGates {
         gate.setBlock(2, 0, 2, Blocks.WHITE_WOOL.defaultBlockState());
         gate.setBlock(2, 0, 4, Blocks.REDSTONE_WIRE.defaultBlockState());
 
-        gate.setBlock(3, 0, 2, Blocks.REDSTONE_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.EAST));
-        gate.setBlock(3, 0, 4, Blocks.REDSTONE_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.WEST));
+        gate.setBlock(3, 0, 2, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.EAST));
+        gate.setBlock(3, 0, 4, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.WEST));
 
         gate.setBlock(4, 0, 0, Blocks.WHITE_WOOL.defaultBlockState());
-        gate.setBlock(4, 0, 1, Blocks.REDSTONE_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
+        gate.setBlock(4, 0, 1, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
         gate.setBlock(4, 0, 2, Blocks.REDSTONE_WIRE.defaultBlockState().setValue(BlockStateProperties.POWER, 10));
         gate.setBlock(4, 0, 3, Blocks.REDSTONE_WIRE.defaultBlockState().setValue(BlockStateProperties.POWER, 10));
         gate.setBlock(4, 0, 4, Blocks.WHITE_WOOL.defaultBlockState());

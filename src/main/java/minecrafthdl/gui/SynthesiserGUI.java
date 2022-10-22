@@ -1,10 +1,16 @@
 package minecrafthdl.gui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import mcjty.theoneprobe.apiimpl.client.ElementTextRender;
 import minecrafthdl.block.blocks.Synthesizer;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -26,7 +32,7 @@ public class SynthesiserGUI extends Screen {
 
     String file_directory = "./verilog_designs";
 
-    ArrayList<String> file_names = new ArrayList<String>();
+    ArrayList<String> file_names = new ArrayList<>();
     int selected_file = -1;
 
 
@@ -53,7 +59,6 @@ public class SynthesiserGUI extends Screen {
         this.blockPos = blockPos;
     }
 
-
     @Override
     public void init() {
         this.window_left = centerObjectTL(this.window_width, this.width);
@@ -64,6 +69,7 @@ public class SynthesiserGUI extends Screen {
         this.filebox_top = window_top + 25;
         this.filebox_bottom = window_top + 130;
 
+        this.buttonList.clear();
         this.buttonList.add(this.synthesize_button = new Button(this.width / 2 - 50, this.height / 2 + 52, 100, 20, Component.literal("Generate Design"), button -> {
             if (this.selected_file < 0) {
                 this.minecraft.setScreen(null);
@@ -83,6 +89,10 @@ public class SynthesiserGUI extends Screen {
         this.buttonList.add(this.down_button = new Button(this.filebox_right + 1, this.filebox_bottom - 19, 20, 20, Component.literal("/"), button -> {
             if (this.start_file_index + 6 < this.file_names.size() - 1) this.start_file_index += 1;
         }));
+
+        for (Button button: this.buttonList) {
+            this.addRenderableWidget(button);
+        }
 
 
         System.out.println("Win L: " + this.window_left + "\tWin T: " + this.window_top);
@@ -124,38 +134,36 @@ public class SynthesiserGUI extends Screen {
 
     @Override
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-        this.minecraft.getTextureManager().bindTexture(new ResourceLocation("minecrafthdl:textures/gui/synthesiser.png"));
-        this.drawTexturedModalRect(centerObjectTL(this.window_width, this.width), centerObjectTL(this.window_height, this.height), 0, 0, this.window_width, this.window_height);
-
-        this.fontRendererObj.drawString(
-                "Synthesiser",
-                (this.width / 2) - (this.fontRendererObj.getStringWidth("Synthesiser") / 2),
+        var texture = Minecraft.getInstance().textureManager.getTexture(new ResourceLocation("minecrafthdl:textures/gui/synthesiser.png"));
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderTexture(0, texture.getId());
+        GuiComponent.blit(poseStack, centerObjectTL(this.window_width, this.width), centerObjectTL(this.window_height, this.height), 0F, 0F, this.window_width, this.window_height, 256, 256);
+        GuiComponent.drawString(poseStack, this.minecraft.font, "Synthesiser",
+                (this.width / 2) - (this.minecraft.font.width("Synthesiser") / 2),
                 (this.height / 2) - 75,
                 0
         );
-
-        this.drawFileNames();
+        this.drawFileNames(poseStack);
 
         super.render(poseStack, mouseX, mouseY, partialTicks);
     }
 
-    private void drawFileNames(){
+    private void drawFileNames(PoseStack poseStack){
         int current_height = this.filebox_top;
         int files_shown = 0;
+        var font = this.minecraft.font;
         for (int i = this.start_file_index; i < this.file_names.size(); i++) {
             if (files_shown == 7) break;
             else  files_shown++;
             String file_name = this.file_names.get(i);
             int max_width = this.filebox_right - this.filebox_left - (2 * this.padding);
-            if (this.fontRendererObj.getStringWidth(file_name) > max_width) {
-                file_name = this.fontRendererObj.trimStringToWidth(file_name, max_width - this.fontRendererObj.getStringWidth("...")) + "...";
+            if (font.width(file_name) > max_width) {
+                file_name = font.plainSubstrByWidth(file_name, max_width - font.width("...")) + "...";
             }
 
             if (this.selected_file == i){
-
-                this.drawGradientRect(
+                this.fillGradient(
+                        poseStack,
                         this.filebox_left,
                         current_height,
                         this.filebox_right,
@@ -165,7 +173,8 @@ public class SynthesiserGUI extends Screen {
 
                 current_height += this.padding;
 
-                this.fontRendererObj.drawString(
+                font.draw(
+                        poseStack,
                         file_name,
                         this.filebox_left + this.padding,
                         current_height,
@@ -177,7 +186,8 @@ public class SynthesiserGUI extends Screen {
             } else {
                 current_height += this.padding;
 
-                this.fontRendererObj.drawString(
+                font.draw(
+                        poseStack,
                         file_name,
                         this.filebox_left + this.padding,
                         current_height,
@@ -189,19 +199,20 @@ public class SynthesiserGUI extends Screen {
         }
     }
 
+
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException{
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if(mouseX >= this.filebox_left && mouseX <= this.filebox_right && mouseY >= this.filebox_top && mouseY <= this.filebox_bottom) {
-            int index = (mouseY - this.filebox_top + (this.start_file_index * this.line_height)) / this.total_height;
+            double index = (mouseY - this.filebox_top + (this.start_file_index * this.line_height)) / this.total_height;
             if (index < this.file_names.size()){
-                this.selected_file = index;
+                this.selected_file = (int) index;
                 this.synthesize_button.active = true;
             } else {
                 this.selected_file = -1;
                 this.synthesize_button.active = false;
             }
         }
-        super.mouseClicked(mouseX, mouseY, mouseButton);
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
 

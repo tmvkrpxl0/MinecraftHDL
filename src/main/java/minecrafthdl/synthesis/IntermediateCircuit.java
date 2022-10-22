@@ -24,17 +24,17 @@ import java.util.HashMap;
 public class IntermediateCircuit {
 
     public ArrayList<ArrayList<Vertex>> vertex_layers = new ArrayList<ArrayList<Vertex>>();
-    public ArrayList<ArrayList<Gate>> gate_layers = new ArrayList<ArrayList<Gate>>();
+    public ArrayList<ArrayList<Gate>> gate_layers = new ArrayList<>();
     public ArrayList<Channel> channels = new ArrayList<Channel>();
 
 
     public void loadGraph(Graph graph) {
         System.out.println("Graph built");
 
-        ArrayList<Vertex> finished = new ArrayList<Vertex>();
-        ArrayList<Vertex> in_process = new ArrayList<Vertex>();
-        ArrayList<Vertex> process_done = new ArrayList<Vertex>();
-        ArrayList<Vertex> to_process = new ArrayList<Vertex>();
+        ArrayList<Vertex> finished = new ArrayList<>();
+        ArrayList<Vertex> in_process = new ArrayList<>();
+        ArrayList<Vertex> process_done = new ArrayList<>();
+        ArrayList<Vertex> to_process = new ArrayList<>();
 
         for (Vertex v : graph.getVertices()) {
             if (v.getType() == VertexType.INPUT) {

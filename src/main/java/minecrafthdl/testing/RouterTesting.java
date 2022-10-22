@@ -9,6 +9,7 @@ import minecrafthdl.synthesis.IntermediateCircuit;
  */
 
 public class RouterTesting {
+    //TODO Convert this to game test
 
     public static void main(String[] args){
         Circuit.TEST = true;
@@ -19,7 +20,4 @@ public class RouterTesting {
         ic.routeChannels();
         ic.channels.get(1).genChannelCircuit();
     }
-
-
-
 }

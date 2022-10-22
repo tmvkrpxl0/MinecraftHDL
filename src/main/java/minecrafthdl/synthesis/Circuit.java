@@ -11,6 +11,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Created by Francis on 10/28/2016.
@@ -20,7 +21,7 @@ public class Circuit {
 
     final int x, y, z;
     Map<BlockPos, BlockState> blocks = new LinkedHashMap<>();
-    HashMap<Vec3i, BlockEntity> te_map = new HashMap<>();
+    HashMap<Vec3i, Function<Vec3i, BlockEntity>> te_map = new HashMap<>();
 
     public Circuit(int sizeX, int sizeY, int sizeZ){
         x = sizeX;
@@ -81,9 +82,13 @@ public class Circuit {
                         BlockPos blk_pos = new BlockPos(start_x + i, start_y + j, start_z + k);
                         worldIn.setBlockAndUpdate(blk_pos, this.getState(i, j, k));
 
-                        BlockEntity te = this.te_map.get(new Vec3i(i, j, k));
-                        assert te.getBlockPos().equals(blk_pos);
-                        worldIn.setBlockEntity(te);
+                        Vec3i vec3i = new Vec3i(i, j, k);
+
+                        var supplier = this.te_map.get(vec3i);
+                        if (supplier != null) {
+                            BlockEntity te = supplier.apply(blk_pos);
+                            worldIn.setBlockEntity(te);
+                        }
                     }
                 }
             }
@@ -116,9 +121,10 @@ public class Circuit {
                 for (int z = 0; z < c.getSizeZ(); z++) {
                     this.setBlock(x + x_offset, y + y_offset, z + z_offset, c.getState(x, y, z));
 
-                    BlockEntity te = c.te_map.get(new Vec3i(x, y, z));
-                    if (te != null) {
-                        this.te_map.put(new Vec3i(x + x_offset, y + y_offset, z + z_offset), te);
+                    Vec3i vec3i = new Vec3i(x, y, z);
+                    var beFunction = c.te_map.get(vec3i);
+                    if (beFunction != null) {
+                        this.te_map.put(new Vec3i(x + x_offset, y + y_offset, z + z_offset), beFunction);
                     }
                 }
             }

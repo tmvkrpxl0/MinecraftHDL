@@ -1,34 +1,18 @@
 package minecrafthdl.block.blocks;
 
 import GraphBuilder.GraphBuilder;
-import minecrafthdl.MHDLException;
-import minecrafthdl.MinecraftHDL;
-import minecrafthdl.block.BasicBlock;
-import minecrafthdl.gui.MinecraftHDLGuiHandler;
+import minecrafthdl.network.HDLPackets;
 import minecrafthdl.synthesis.Circuit;
 import minecrafthdl.synthesis.IntermediateCircuit;
-import minecrafthdl.synthesis.LogicGates;
-import net.minecraft.block.Block;
-import net.minecraft.block.properties.PropertyBool;
-import net.minecraft.block.state.BlockStateContainer;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.World;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
@@ -36,11 +20,7 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.BlockHitResult;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
-
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.util.Random;
+import net.minecraftforge.network.PacketDistributor;
 
 /**
  * Created by Francis on 10/28/2016.
@@ -73,13 +53,11 @@ public class Synthesizer extends Block {
         if (level.isClientSide){
             return InteractionResult.SUCCESS;
         } else {
-            state.getMenuProvider(level, state)
-            player.openMenu(MinecraftHDLGuiHandler.SYNTHESISER_GUI_ID);
+            var packet = new HDLPackets.OpenSynthesizerPacket(pos);
+            HDLPackets.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), packet);
             return InteractionResult.SUCCESS;
         }
     }
-
-
 
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos, boolean isMoving) {
@@ -95,8 +73,6 @@ public class Synthesizer extends Block {
                     }
                 }
             }
-
-            level.notifyNeighborsOfStateChange(pos, this);
         }
     }
 
