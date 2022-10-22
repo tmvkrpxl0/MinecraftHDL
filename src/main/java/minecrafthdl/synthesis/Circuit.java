@@ -1,39 +1,37 @@
 package minecrafthdl.synthesis;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntitySign;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by Francis on 10/28/2016.
  */
 public class Circuit {
-
     public static boolean TEST = false;
 
-    ArrayList<ArrayList<ArrayList<IBlockState>>> blocks;
-    HashMap<Vec3i, TileEntity> te_map = new HashMap<Vec3i, TileEntity>();
+    final int x, y, z;
+    Map<BlockPos, BlockState> blocks = new LinkedHashMap<>();
+    HashMap<Vec3i, BlockEntity> te_map = new HashMap<>();
 
     public Circuit(int sizeX, int sizeY, int sizeZ){
-        this.blocks = new ArrayList<ArrayList<ArrayList<IBlockState>>>();
-        for (int x = 0; x < sizeX; x++) {
-            this.blocks.add(new ArrayList<ArrayList<IBlockState>>());
-            for (int y = 0; y < sizeY; y++) {
-                this.blocks.get(x).add(new ArrayList<IBlockState>());
-                for (int z = 0; z < sizeZ; z++) {
-                    if (!Circuit.TEST) this.blocks.get(x).get(y).add(Blocks.AIR.getDefaultState());
+        x = sizeX;
+        y = sizeY;
+        z = sizeZ;
+        if (!Circuit.TEST) {
+            for (int x = 0; x < sizeX; x++) {
+                for (int y = 0; y < sizeY; y++) {
+                    for (int z = 0; z < sizeZ; z++) {
+                        this.blocks.put(new BlockPos(x, y, z), Blocks.AIR.defaultBlockState());
+                    }
                 }
             }
         }
@@ -41,76 +39,75 @@ public class Circuit {
 
 
 
-    public void setBlock(int x, int y, int z, IBlockState blockstate) {
+    public void setBlock(int x, int y, int z, BlockState blockstate) {
         if (TEST) return;
-        this.blocks.get(x).get(y).set(z, blockstate);
+        this.blocks.put(new BlockPos(x, y, z), blockstate);
     }
 
-    public void placeInWorld(World worldIn, BlockPos pos, EnumFacing direction) {
-        int width = blocks.size();
-        int height = blocks.get(0).size();
-        int length = blocks.get(0).get(0).size();
+    public void placeInWorld(Level worldIn, BlockPos pos, Direction direction) {
+        int width = x;
+        int height = y;
+        int length = z;
 
         int start_x = pos.getX();
         int start_y = pos.getY();
         int start_z = pos.getZ();
 
-        if (direction == EnumFacing.NORTH){
+        if (direction == Direction.NORTH){
             start_z += 2;
-        } else if (direction == EnumFacing.SOUTH) {
+        } else if (direction == Direction.SOUTH) {
             start_z -= length + 1;
-        } else if (direction == EnumFacing.EAST){
+        } else if (direction == Direction.EAST){
             start_x -= width + 1;
-        } else if (direction == EnumFacing.WEST) {
+        } else if (direction == Direction.WEST) {
             start_x -= width + 1;
         }
 
         int y = start_y - 1;
         for (int z = start_z - 1; z < start_z + length + 1; z ++){
             for (int x = start_x - 1; x < start_x + width + 1; x++){
-                worldIn.setBlockState(new BlockPos(x, y, z), Blocks.STONEBRICK.getDefaultState());
+                worldIn.setBlockAndUpdate(new BlockPos(x, y, z), Blocks.STONE_BRICKS.defaultBlockState());
             }
         }
 
-        HashMap<Vec3i ,IBlockState> torches = new HashMap<Vec3i, IBlockState>();
+        HashMap<Vec3i ,BlockState> torches = new HashMap<>();
 
         for (int i = 0; i < width; i++){
             for (int j = 0; j < height; j++) {
                 for (int k = 0; k < length; k++) {
-                    if (this.getState(i, j, k).getBlock().getDefaultState() == Blocks.REDSTONE_TORCH.getDefaultState()) {
+                    if (this.getState(i, j, k).getBlock().defaultBlockState() == Blocks.REDSTONE_TORCH.defaultBlockState()) {
                         torches.put(new Vec3i(i, j, k), this.getState(i, j, k));
                     } else {
                         BlockPos blk_pos = new BlockPos(start_x + i, start_y + j, start_z + k);
-                        worldIn.setBlockState(blk_pos, this.getState(i, j, k));
+                        worldIn.setBlockAndUpdate(blk_pos, this.getState(i, j, k));
 
-                        TileEntity te = this.te_map.get(new Vec3i(i, j, k));
-                        if (te != null) {
-                            worldIn.setTileEntity(blk_pos, te);
-                        }
+                        BlockEntity te = this.te_map.get(new Vec3i(i, j, k));
+                        assert te.getBlockPos().equals(blk_pos);
+                        worldIn.setBlockEntity(te);
                     }
                 }
             }
         }
 
-        for (Map.Entry<Vec3i, IBlockState> set : torches.entrySet()){
-            worldIn.setBlockState(new BlockPos(start_x + set.getKey().getX(), start_y + set.getKey().getY(), start_z + set.getKey().getZ()), set.getValue());
+        for (Map.Entry<Vec3i, BlockState> set : torches.entrySet()){
+            worldIn.setBlockAndUpdate(new BlockPos(start_x + set.getKey().getX(), start_y + set.getKey().getY(), start_z + set.getKey().getZ()), set.getValue());
         }
     }
 
     public int getSizeX() {
-        return this.blocks.size();
+        return x;
     }
 
     public int getSizeY() {
-        return this.blocks.get(0).size();
+        return y;
     }
 
     public int getSizeZ() {
-        return this.blocks.get(0).get(0).size();
+        return z;
     }
 
-    public IBlockState getState(int x, int y, int z){
-        return this.blocks.get(x).get(y).get(z);
+    public BlockState getState(int x, int y, int z){
+        return this.blocks.get(new BlockPos(x, y, z));
     }
 
     public void insertCircuit(int x_offset, int y_offset, int z_offset, Circuit c) {
@@ -119,7 +116,7 @@ public class Circuit {
                 for (int z = 0; z < c.getSizeZ(); z++) {
                     this.setBlock(x + x_offset, y + y_offset, z + z_offset, c.getState(x, y, z));
 
-                    TileEntity te = c.te_map.get(new Vec3i(x, y, z));
+                    BlockEntity te = c.te_map.get(new Vec3i(x, y, z));
                     if (te != null) {
                         this.te_map.put(new Vec3i(x + x_offset, y + y_offset, z + z_offset), te);
                     }

@@ -1,15 +1,15 @@
 package minecrafthdl.block;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.world.level.block.Block;
 
 /**
  * Created by Francis on 10/5/2016.
  */
 public class BasicBlock extends Block {
 
-    public BasicBlock(String unlocalizedName, Material material, float hardness, float resistance) {
+    public BasicBlock(Material material, float hardness, float resistance) {
         super(material);
         this.setUnlocalizedName(unlocalizedName);
         this.setCreativeTab(CreativeTabs.MISC);

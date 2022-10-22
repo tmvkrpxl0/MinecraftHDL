@@ -1,26 +1,28 @@
 package minecrafthdl.gui;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import minecrafthdl.block.blocks.Synthesizer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 import org.lwjgl.opengl.GL11;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Created by Francis on 3/25/2017.
  */
-public class SynthesiserGUI extends GuiScreen {
+public class SynthesiserGUI extends Screen {
 
-    GuiButton synthesize_button, up_button, down_button;
-    int synth_b_id = 0;
-    int up_b_id = 1;
-    int down_b_id = 2;
+    Button synthesize_button, up_button, down_button;
 
     String file_directory = "./verilog_designs";
 
@@ -39,24 +41,21 @@ public class SynthesiserGUI extends GuiScreen {
 
     int start_file_index = 0;
 
-    int block_x, block_y, block_z;
-    World world;
+    BlockPos blockPos;
+    Level world;
+
+    List<Button> buttonList = new LinkedList<>();
 
 
-    public SynthesiserGUI(World world, int x, int y, int z) {
-        super();
-
+    public SynthesiserGUI(Level world, BlockPos blockPos) {
+        super(Component.literal("Minecraft HDL"));
         this.world = world;
-        this.block_x = x;
-        this.block_y = y;
-        this.block_z = z;
+        this.blockPos = blockPos;
     }
 
 
     @Override
-    public void initGui() {
-
-
+    public void init() {
         this.window_left = centerObjectTL(this.window_width, this.width);
         this.window_top = centerObjectTL(this.window_height, this.height);
 
@@ -65,14 +64,30 @@ public class SynthesiserGUI extends GuiScreen {
         this.filebox_top = window_top + 25;
         this.filebox_bottom = window_top + 130;
 
-        this.buttonList.add(this.synthesize_button = new GuiButton(this.synth_b_id, this.width / 2 - 50, this.height / 2 + 52, 100, 20, "Generate Design"));
-        this.buttonList.add(this.up_button = new GuiButton(this.up_b_id , this.filebox_right + 1, this.filebox_top - 1, 20, 20, "^"));
-        this.buttonList.add(this.down_button = new GuiButton(this.down_b_id, this.filebox_right + 1, this.filebox_bottom - 19, 20, 20, "/"));
+        this.buttonList.add(this.synthesize_button = new Button(this.width / 2 - 50, this.height / 2 + 52, 100, 20, Component.literal("Generate Design"), button -> {
+            if (this.selected_file < 0) {
+                this.minecraft.setScreen(null);
+                if (this.minecraft.screen == null)
+                    this.minecraft.mouseHandler.grabMouse();
+            }
+
+            Synthesizer.file_to_gen = this.file_directory + "/" + this.file_names.get(this.selected_file);
+
+            this.minecraft.setScreen(null);
+            if (this.minecraft.screen == null)
+                this.minecraft.mouseHandler.grabMouse();
+        }));
+        this.buttonList.add(this.up_button = new Button(this.filebox_right + 1, this.filebox_top - 1, 20, 20, Component.literal("^"), button -> {
+            if (this.start_file_index > 0) this.start_file_index-= 1;
+        }));
+        this.buttonList.add(this.down_button = new Button(this.filebox_right + 1, this.filebox_bottom - 19, 20, 20, Component.literal("/"), button -> {
+            if (this.start_file_index + 6 < this.file_names.size() - 1) this.start_file_index += 1;
+        }));
 
 
         System.out.println("Win L: " + this.window_left + "\tWin T: " + this.window_top);
 
-        this.synthesize_button.enabled = false;
+        this.synthesize_button.active = false;
         this.file_names = this.readFileNames();
     }
 
@@ -80,18 +95,13 @@ public class SynthesiserGUI extends GuiScreen {
         ArrayList<String> files = new ArrayList<String>();
         File folder = new File(file_directory);
 
-        if (folder == null) {
-            folder.mkdir();
-        }
-
         System.out.println("PWD: " + System.getProperty("user.dir"));
-
 
         if (!folder.exists()) {
             folder.mkdir();
-            Minecraft.getMinecraft().thePlayer.sendChatMessage("Created folder 'verilog_designs'");
-            Minecraft.getMinecraft().thePlayer.sendChatMessage("Copy your synthesized JSON files to this directory:");
-            Minecraft.getMinecraft().thePlayer.sendChatMessage(System.getProperty("user.dir") + "\\verilog_designs");
+            Minecraft.getInstance().player.sendSystemMessage(Component.literal("Created folder 'verilog_designs'"));
+            Minecraft.getInstance().player.sendSystemMessage(Component.literal("Copy your synthesized JSON files to this directory:"));
+            Minecraft.getInstance().player.sendSystemMessage(Component.literal(System.getProperty("user.dir") + "\\verilog_designs"));
 
         } else {
             for (File f : folder.listFiles()){
@@ -100,9 +110,6 @@ public class SynthesiserGUI extends GuiScreen {
                 }
             }
         }
-
-
-
 
         return files;
     }
@@ -116,9 +123,10 @@ public class SynthesiserGUI extends GuiScreen {
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
         GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-        this.mc.getTextureManager().bindTexture(new ResourceLocation("minecrafthdl:textures/gui/synthesiser.png"));
+
+        this.minecraft.getTextureManager().bindTexture(new ResourceLocation("minecrafthdl:textures/gui/synthesiser.png"));
         this.drawTexturedModalRect(centerObjectTL(this.window_width, this.width), centerObjectTL(this.window_height, this.height), 0, 0, this.window_width, this.window_height);
 
         this.fontRendererObj.drawString(
@@ -130,7 +138,7 @@ public class SynthesiserGUI extends GuiScreen {
 
         this.drawFileNames();
 
-        super.drawScreen(mouseX, mouseY, partialTicks);
+        super.render(poseStack, mouseX, mouseY, partialTicks);
     }
 
     private void drawFileNames(){
@@ -187,47 +195,18 @@ public class SynthesiserGUI extends GuiScreen {
             int index = (mouseY - this.filebox_top + (this.start_file_index * this.line_height)) / this.total_height;
             if (index < this.file_names.size()){
                 this.selected_file = index;
-                this.synthesize_button.enabled = true;
+                this.synthesize_button.active = true;
             } else {
                 this.selected_file = -1;
-                this.synthesize_button.enabled = false;
+                this.synthesize_button.active = false;
             }
         }
         super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
-    @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
-        System.out.println("Hi");
-        if (button == this.synthesize_button) {
-            if (this.selected_file < 0) {
-                this.mc.displayGuiScreen(null);
-                if (this.mc.currentScreen == null)
-                    this.mc.setIngameFocus();
-            }
-
-            Synthesizer.file_to_gen = this.file_directory + "/" + this.file_names.get(this.selected_file);
-
-            this.mc.displayGuiScreen(null);
-            if (this.mc.currentScreen == null)
-                this.mc.setIngameFocus();
-        }
-        if (button == this.up_button){
-            if (this.start_file_index > 0) this.start_file_index-= 1;
-        }
-        if (button == this.down_button){
-            if (this.start_file_index + 6 < this.file_names.size() - 1) this.start_file_index += 1;
-        }
-
-
-
-        super.actionPerformed(button);
-    }
 
     @Override
-    public boolean doesGuiPauseGame() {
+    public boolean isPauseScreen() {
         return false;
     }
-
-
 }
